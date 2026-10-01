@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: email-scanner-service
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:boletosafe_scanner}
+    username: ${DB_USER:boletosafe}
+    password: ${DB_PASSWORD:boletosafe}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:defina-no-google-cloud-console}
+            client-secret: ${GOOGLE_CLIENT_SECRET:defina-no-google-cloud-console}
+            scope:
+              - https://www.googleapis.com/auth/gmail.readonly
+              - email
+              - profile
+
+server:
+  port: ${SERVER_PORT:8083}
+
+boletosafe:
+  jwt:
+    secret: ${JWT_SECRET:boletosafe-super-secret-key-troque-em-producao-0000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

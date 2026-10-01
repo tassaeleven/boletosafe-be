@@ -1,0 +1,72 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: boletosafe
+      POSTGRES_PASSWORD: boletosafe
+      POSTGRES_MULTIPLE_DATABASES: boletosafe_auth,boletosafe_risk,boletosafe_scanner
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  auth-service:
+    build: ./auth-service
+    environment:
+      DB_HOST: postgres
+      DB_NAME: boletosafe_auth
+      DB_USER: boletosafe
+      DB_PASSWORD: boletosafe
+      JWT_SECRET: boletosafe-super-secret-key-troque-em-producao-0000
+      SPRING_PROFILES_ACTIVE: dev
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+
+  boleto-risk-engine:
+    build: ./boleto-risk-engine
+    environment:
+      DB_HOST: postgres
+      DB_NAME: boletosafe_risk
+      DB_USER: boletosafe
+      DB_PASSWORD: boletosafe
+      RABBITMQ_HOST: rabbitmq
+      JWT_SECRET: boletosafe-super-secret-key-troque-em-producao-0000
+      SPRING_PROFILES_ACTIVE: dev
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  email-scanner-service:
+    build: ./email-scanner-service
+    environment:
+      DB_HOST: postgres
+      DB_NAME: boletosafe_scanner
+      DB_USER: boletosafe
+      DB_PASSWORD: boletosafe
+      RABBITMQ_HOST: rabbitmq
+      JWT_SECRET: boletosafe-super-secret-key-troque-em-producao-0000
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-defina-no-.env}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-defina-no-.env}
+      SPRING_PROFILES_ACTIVE: dev
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres
+      - rabbitmq
+
+volumes:
+  postgres_data:

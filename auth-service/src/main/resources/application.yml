@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:boletosafe_auth}
+    username: ${DB_USER:boletosafe}
+    password: ${DB_PASSWORD:boletosafe}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+
+server:
+  port: ${SERVER_PORT:8081}
+
+boletosafe:
+  jwt:
+    # MESMA chave nos 3 microsservicos. Em producao, isso vem de variavel
+    # de ambiente/secret manager, nunca hardcoded.
+    secret: ${JWT_SECRET:boletosafe-super-secret-key-troque-em-producao-0000}
+    expiracao-minutos: 60
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
