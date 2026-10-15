@@ -1,0 +1,32 @@
+name: Auto PR para develop
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  abrir-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Abrir PR se ainda não existir
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          existentes=$(gh pr list --head "$BRANCH" --base develop --state open --json number --jq 'length')
+          if [ "$existentes" -gt 0 ]; then
+            echo "Já existe PR aberto para $BRANCH."
+          else
+            gh pr create \
+              --base develop \
+              --head "$BRANCH" \
+              --title "$BRANCH" \
+              --body "PR automático a partir de \`$BRANCH\`." \
+              --draft
+          fi
