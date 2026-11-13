@@ -17,7 +17,6 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Fala com a Gmail API usando o access token que o Spring Security guarda
