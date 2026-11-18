@@ -55,6 +55,10 @@ public class AnaliseRisco {
     @Column(columnDefinition = "TEXT")
     private String observacoes;
 
+    /** Título amigável: assunto do e-mail de origem (nulo em análises manuais). */
+    @Column(columnDefinition = "TEXT")
+    private String titulo;
+
     @Column(name = "criado_em", nullable = false, updatable = false)
     private Instant criadoEm = Instant.now();
 
@@ -83,6 +87,8 @@ public class AnaliseRisco {
     public void setVersaoRegrasUtilizada(String v) { this.versaoRegrasUtilizada = v; }
     public String getObservacoes() { return observacoes; }
     public void setObservacoes(String observacoes) { this.observacoes = observacoes; }
+    public String getTitulo() { return titulo; }
+    public void setTitulo(String titulo) { this.titulo = titulo; }
     public Instant getCriadoEm() { return criadoEm; }
     public List<ResultadoRegra> getResultadosRegras() { return resultadosRegras; }
 }

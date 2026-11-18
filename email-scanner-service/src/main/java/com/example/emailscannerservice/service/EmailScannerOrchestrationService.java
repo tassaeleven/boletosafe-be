@@ -166,7 +166,8 @@ public class EmailScannerOrchestrationService {
                 registro.getBeneficiarioDocumentoExtraido(),
                 registro.getValorExtraido(),
                 registro.getVencimentoExtraido(),
-                null // banco emissor: o Risk Engine tenta resolver pela linha digitável
+                null, // banco emissor: o Risk Engine tenta resolver pela linha digitável
+                registro.getAssunto()
         ));
         log.info("Boleto {} publicado na fila para análise de risco", registro.getId());
     }

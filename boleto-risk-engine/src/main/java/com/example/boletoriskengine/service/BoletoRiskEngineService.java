@@ -153,6 +153,7 @@ public class BoletoRiskEngineService {
         analise.setBeneficiario(beneficiario);
         analise.setOrigemCobranca(origem);
         analise.setUsuarioId(usuarioId);
+        analise.setTitulo(request.titulo());
         analise.setValorInformado(request.valorInformado());
         analise.setVencimentoInformado(request.vencimentoInformado());
         analise.setScoreTotal(scoreTotal);

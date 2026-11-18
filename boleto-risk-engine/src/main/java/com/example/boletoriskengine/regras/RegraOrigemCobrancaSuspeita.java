@@ -5,14 +5,14 @@ import java.util.Set;
 
 /**
  * Categoria: origem da cobranca.
- * Boletos recebidos por canais informais (e-mail, WhatsApp, SMS) pesam
+ * Boletos recebidos por canais informais (WhatsApp, SMS) pesam
  * mais que canais oficiais (portal do proprio fornecedor, carta fisica),
  * porque sao os canais mais faceis de forjar/interceptar.
  */
 @Component
 public class RegraOrigemCobrancaSuspeita implements RegraDeRisco {
 
-    private static final Set<String> CANAIS_SUSPEITOS = Set.of("EMAIL", "WHATSAPP", "SMS");
+    private static final Set<String> CANAIS_SUSPEITOS = Set.of("WHATSAPP", "SMS");
 
     @Override
     public String codigo() {

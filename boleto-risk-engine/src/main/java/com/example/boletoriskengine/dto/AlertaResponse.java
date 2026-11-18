@@ -22,6 +22,7 @@ public record AlertaResponse(
         BigDecimal valor,
         LocalDate vencimento,
         int scoreTotal,
-        String nivelRisco
+        String nivelRisco,
+        String titulo
 ) {
 }
