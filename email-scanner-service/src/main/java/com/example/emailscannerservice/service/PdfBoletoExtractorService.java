@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.time.temporal.ChronoUnit;
 
 /**
  * Abre o PDF (tentando as senhas candidatas se estiver criptografado) e
@@ -31,8 +32,8 @@ public class PdfBoletoExtractorService {
 
     private static final Logger log = LoggerFactory.getLogger(PdfBoletoExtractorService.class);
 
-    private static final Pattern LINHA_DIGITAVEL =
-            Pattern.compile("(\\d{5}[.\\s]?\\d{5}\\s?\\d{5}[.\\s]?\\d{6}\\s?\\d{5}[.\\s]?\\d{6}\\s?\\d\\s?\\d{14})");
+        private static final Pattern LINHA_DIGITAVEL = Pattern.compile(
+            "(\\d{5}[.\\s]*\\d{5}[.\\s]*\\d{5}[.\\s]*\\d{6}[.\\s]*\\d{5}[.\\s]*\\d{6}[.\\s]*\\d[.\\s]*\\d{14})");
     private static final Pattern VALOR = Pattern.compile("R\\$\\s?([\\d.,]+)");
     private static final Pattern VENCIMENTO = Pattern.compile("(\\d{2}/\\d{2}/\\d{4})");
     private static final Pattern DOCUMENTO = Pattern.compile("(\\d{2}\\.\\d{3}\\.\\d{3}/\\d{4}-\\d{2}|\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2})");
@@ -89,28 +90,60 @@ public class PdfBoletoExtractorService {
         }
     }
 
-    private ResultadoExtracao parsearTexto(String texto) {
+        private ResultadoExtracao parsearTexto(String texto) {
         try {
-            String linhaDigitavel = buscar(LINHA_DIGITAVEL, texto).map(s -> s.replaceAll("[.\\s]", "")).orElse(null);
+            String linhaDigitavel = buscar(LINHA_DIGITAVEL, texto)
+                    .map(s -> s.replaceAll("[^0-9]", "")).orElse(null);
             String documento = buscar(DOCUMENTO, texto).orElse(null);
-            BigDecimal valor = buscar(VALOR, texto)
-                    .map(v -> v.replace(".", "").replace(",", "."))
-                    .map(BigDecimal::new)
-                    .orElse(null);
-            LocalDate vencimento = buscar(VENCIMENTO, texto)
-                    .map(v -> LocalDate.parse(v, DateTimeFormatter.ofPattern("dd/MM/yyyy")))
-                    .orElse(null);
+
+            BigDecimal valor = null;
+            LocalDate vencimento = null;
+
+            // 1o: tira valor e vencimento da própria linha digitável (padrão Febraban)
+            if (linhaDigitavel != null && linhaDigitavel.length() == 47) {
+                valor = new BigDecimal(linhaDigitavel.substring(37, 47)).movePointLeft(2);
+                vencimento = vencimentoDoFator(linhaDigitavel.substring(33, 37));
+            }
+
+            // 2o: fallback por regex no texto
+            if (valor == null) {
+                valor = buscar(VALOR, texto)
+                        .map(v -> v.replace(".", "").replace(",", "."))
+                        .map(BigDecimal::new)
+                        .orElse(null);
+            }
+            if (vencimento == null) {
+                vencimento = buscar(VENCIMENTO, texto)
+                        .map(v -> LocalDate.parse(v, DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+                        .orElse(null);
+            }
 
             if (linhaDigitavel == null || valor == null || vencimento == null) {
+                log.warn("Extração falhou: linhaDigitavel={}, valor={}, vencimento={}, caracteresNoTexto={}",
+                        linhaDigitavel != null, valor != null, vencimento != null, texto.length());
                 return ResultadoExtracao.falha();
             }
 
-            return new ResultadoExtracao(true, false, linhaDigitavel, extrairNomeBeneficiario(texto), documento, valor, vencimento);
+            return new ResultadoExtracao(true, false, linhaDigitavel,
+                    extrairNomeBeneficiario(texto), documento, valor, vencimento);
 
         } catch (Exception e) {
             log.warn("Falha ao interpretar texto extraído do PDF: {}", e.getMessage());
             return ResultadoExtracao.falha();
         }
+    }
+
+    /** Fator de vencimento Febraban: dias desde 07/10/1997, reiniciado em 22/02/2025 (ciclo de 9000 dias). */
+    private LocalDate vencimentoDoFator(String fator) {
+        int f = Integer.parseInt(fator);
+        if (f == 0) {
+            return null; // boleto sem vencimento
+        }
+        LocalDate antigo = LocalDate.of(1997, 10, 7).plusDays(f);
+        LocalDate novo = antigo.plusDays(9000);
+        LocalDate hoje = LocalDate.now();
+        return Math.abs(ChronoUnit.DAYS.between(hoje, antigo)) <= Math.abs(ChronoUnit.DAYS.between(hoje, novo))
+                ? antigo : novo;
     }
 
     private Optional<String> buscar(Pattern padrao, String texto) {
