@@ -75,6 +75,11 @@ public class EmailScannerOrchestrationService {
 
             var resultado = pdfBoletoExtractorService.extrair(anexo.conteudo(), senhasCandidatas);
 
+            if (resultado.sucesso() && emailBoletoEncontradoRepository
+                    .existsByUsuarioIdAndLinhaDigitavelExtraida(usuarioId, resultado.linhaDigitavel())) {
+                continue;
+            }
+
             if (resultado.sucesso()) {
                 preencherDadosExtraidos(registro, resultado);
                 registro.setStatus(StatusBoletoEncontrado.ANALISADO);

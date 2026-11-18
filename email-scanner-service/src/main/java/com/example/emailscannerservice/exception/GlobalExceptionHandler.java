@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(BoletoNaoEncontradoException.class)
     public ResponseEntity<ErroResponse> tratarNaoEncontrado(BoletoNaoEncontradoException ex) {
@@ -29,6 +30,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroResponse> tratarErroGenerico(Exception ex) {
+        log.error("Erro interno no Email Scanner Service", ex);
         return ResponseEntity.internalServerError().body(new ErroResponse("Erro interno no Email Scanner Service"));
     }
 }
