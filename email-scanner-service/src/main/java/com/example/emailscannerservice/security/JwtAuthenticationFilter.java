@@ -34,8 +34,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                     HttpServletResponse response,
-                                     FilterChain filterChain) throws ServletException, IOException {
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
 
         String uri = request.getRequestURI();
         boolean rotaSemJwt = uri.startsWith("/oauth2") || uri.startsWith("/login")
@@ -57,8 +57,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             Claims claims = jwtService.extrairClaims(authHeader.substring(7));
             String perfil = claims.get("perfil", String.class);
+            Long usuarioId = ((Number) claims.get("usuarioId")).longValue();
             var authentication = new UsernamePasswordAuthenticationToken(
-                    claims.getSubject(), null, List.of(new SimpleGrantedAuthority("ROLE_" + perfil)));
+                    usuarioId, null, List.of(new SimpleGrantedAuthority("ROLE_" + perfil)));
             SecurityContextHolder.getContext().setAuthentication(authentication);
             filterChain.doFilter(request, response);
 

@@ -27,7 +27,8 @@ public class SenhaPatternService {
         var nascimento = perfil.getDataNascimento();
 
         if (cpf != null && cpf.length() == 11) {
-            candidatos.add(cpf.substring(0, 4));   // padrão comum: 4 primeiros dígitos do CPF
+            candidatos.add(cpf.substring(0, 4));
+            candidatos.add(cpf.substring(0, 5));   // padrão comum: 4 primeiros dígitos do CPF
             candidatos.add(cpf.substring(0, 3));   // variação: 3 primeiros
             candidatos.add(cpf);                   // variação: CPF completo
         }

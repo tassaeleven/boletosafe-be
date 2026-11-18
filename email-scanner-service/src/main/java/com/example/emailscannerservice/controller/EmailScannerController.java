@@ -38,21 +38,20 @@ public class EmailScannerController {
      */
     @PostMapping("/sincronizar")
     public List<BoletoEncontradoResponse> sincronizar(OAuth2AuthenticationToken authentication,
-                                                        @RequestParam Long usuarioId) throws Exception {
-        return orchestrationService.sincronizar(authentication, usuarioId).stream()
-                .map(orchestrationService::paraResponse)
-                .toList();
+            @RequestParam Long usuarioId) throws Exception {
+        orchestrationService.sincronizar(authentication, usuarioId);
+        return orchestrationService.listar(usuarioId); // devolve tudo do usuário, não só os novos
     }
 
     @PostMapping("/boletos/{id}/desbloquear")
     public BoletoEncontradoResponse desbloquear(@PathVariable Long id,
-                                                 @Valid @RequestBody DesbloquearBoletoRequest request) {
+            @Valid @RequestBody DesbloquearBoletoRequest request) {
         return orchestrationService.paraResponse(
                 orchestrationService.desbloquear(id, usuarioIdDoToken(), request));
     }
 
     private Long usuarioIdDoToken() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth != null ? auth.getName().hashCode() * 1L : null;
+        return auth != null ? (Long) auth.getPrincipal() : null;
     }
 }

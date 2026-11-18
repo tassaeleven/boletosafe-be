@@ -53,8 +53,7 @@ public class EmailBoletoEncontrado {
     private LocalDate vencimentoExtraido;
 
     // guardado so enquanto BLOQUEADO, pra permitir desbloqueio manual depois
-    @Lob
-    @Column(name = "pdf_base64")
+    @Column(name = "pdf_base64", columnDefinition = "text")
     private String pdfBase64;
 
     @Column(name = "criado_em", nullable = false, updatable = false)
