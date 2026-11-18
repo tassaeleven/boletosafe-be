@@ -27,6 +27,8 @@ public record BoletoAnaliseRequest(
 
         Long bancoInstituicaoId,
 
-        Long origemCobrancaId
+        Long origemCobrancaId,
+
+        String titulo
 ) {
 }

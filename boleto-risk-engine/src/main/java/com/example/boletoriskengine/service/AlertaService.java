@@ -8,7 +8,9 @@ import com.example.boletoriskengine.dto.AlertaResponse;
 import com.example.boletoriskengine.repository.AlertaRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class AlertaService {
@@ -25,7 +27,22 @@ public class AlertaService {
                 ? alertaRepository.findByStatus(status)
                 : alertaRepository.findAll();
 
-        return alertas.stream().map(this::paraResponse).toList();
+        List<AlertaResponse> todas = alertas.stream().map(this::paraResponse).toList();
+
+        // boleto idêntico analisado mais de uma vez: mantém só a primeira análise
+        Map<String, Long> primeiraAnalise = new HashMap<>();
+        for (AlertaResponse a : todas) {
+            primeiraAnalise.merge(chaveDoBoleto(a), a.analiseRiscoId(), Math::min);
+        }
+
+        return todas.stream()
+                .filter(a -> a.analiseRiscoId().equals(primeiraAnalise.get(chaveDoBoleto(a))))
+                .toList();
+    }
+
+    private String chaveDoBoleto(AlertaResponse a) {
+        return a.linhaDigitavel() + "|" + a.valor().stripTrailingZeros().toPlainString()
+                + "|" + a.vencimento();
     }
 
     private AlertaResponse paraResponse(Alerta alerta) {
@@ -47,7 +64,8 @@ public class AlertaService {
                 analise.getValorInformado(),
                 analise.getVencimentoInformado(),
                 analise.getScoreTotal(),
-                analise.getNivelRisco().name()
+                analise.getNivelRisco().name(),
+                analise.getTitulo()
         );
     }
 }
