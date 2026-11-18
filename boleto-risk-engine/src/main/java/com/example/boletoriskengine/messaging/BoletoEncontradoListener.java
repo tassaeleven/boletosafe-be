@@ -38,10 +38,10 @@ public class BoletoEncontradoListener {
                 mensagem.valorInformado(),
                 mensagem.vencimentoInformado(),
                 mensagem.bancoInstituicaoId(),
-                origemEmailId
+                origemEmailId,
+                mensagem.assunto()
         );
 
-        // roda exatamente a mesma pipeline de regras do endpoint manual
         boletoRiskEngineService.analisar(request, mensagem.usuarioId());
     }
 }
