@@ -8,4 +8,5 @@ import java.util.Optional;
 public interface EmailBoletoEncontradoRepository extends JpaRepository<EmailBoletoEncontrado, Long> {
     List<EmailBoletoEncontrado> findByUsuarioIdOrderByCriadoEmDesc(Long usuarioId);
     Optional<EmailBoletoEncontrado> findByMensagemGmailId(String mensagemGmailId);
+    boolean existsByUsuarioIdAndLinhaDigitavelExtraida(Long usuarioId, String linhaDigitavelExtraida);
 }

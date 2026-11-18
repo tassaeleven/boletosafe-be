@@ -152,14 +152,21 @@ public class PdfBoletoExtractorService {
     }
 
     private String extrairNomeBeneficiario(String texto) {
-        // Heurística simples: primeira linha não vazia do texto costuma ser
-        // o cabeçalho com o nome do beneficiário na maioria dos layouts
-        // Febraban. Não é garantido — por isso o usuário sempre revisa os
-        // dados na tela antes de confirmar a análise.
-        return texto.lines()
-                .map(String::trim)
-                .filter(linha -> !linha.isBlank())
-                .findFirst()
-                .orElse("Beneficiário não identificado");
+        List<String> linhas = texto.lines().map(String::trim).filter(l -> !l.isBlank()).toList();
+        for (int i = 0; i < linhas.size(); i++) {
+            String linha = linhas.get(i);
+            String minuscula = linha.toLowerCase();
+            if (minuscula.startsWith("beneficiário") || minuscula.startsWith("beneficiario")
+                    || minuscula.startsWith("cedente")) {
+                int doisPontos = linha.indexOf(':');
+                if (doisPontos >= 0 && !linha.substring(doisPontos + 1).isBlank()) {
+                    return linha.substring(doisPontos + 1).trim();
+                }
+                if (i + 1 < linhas.size()) {
+                    return linhas.get(i + 1);
+                }
+            }
+        }
+        return "Beneficiário não identificado";
     }
 }
