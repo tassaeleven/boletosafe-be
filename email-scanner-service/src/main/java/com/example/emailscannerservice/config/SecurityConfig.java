@@ -9,6 +9,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 
 /**
  * Esse servico precisa de DOIS mecanismos de autenticacao ao mesmo tempo:
@@ -28,11 +31,23 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final ClientRegistrationRepository clientRegistrationRepository;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
-                          OAuth2SuccessHandler oAuth2SuccessHandler) {
+                          OAuth2SuccessHandler oAuth2SuccessHandler,
+                          ClientRegistrationRepository clientRegistrationRepository) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.oAuth2SuccessHandler = oAuth2SuccessHandler;
+        this.clientRegistrationRepository = clientRegistrationRepository;
+    }
+
+    private OAuth2AuthorizationRequestResolver resolverComEscolhaDeConta() {
+        var resolver = new DefaultOAuth2AuthorizationRequestResolver(
+                clientRegistrationRepository, "/oauth2/authorization");
+        // força o Google a mostrar a escolha de conta a cada conexão
+        resolver.setAuthorizationRequestCustomizer(c ->
+                c.additionalParameters(p -> p.put("prompt", "select_account consent")));
+        return resolver;
     }
 
     @Bean
@@ -50,7 +65,9 @@ public class SecurityConfig {
                     new org.springframework.security.web.authentication.HttpStatusEntryPoint(
                             org.springframework.http.HttpStatus.UNAUTHORIZED),
                     request -> request.getRequestURI().startsWith("/api/")))
-            .oauth2Login(oauth2 -> oauth2.successHandler(oAuth2SuccessHandler)) // habilita /oauth2/authorization/google
+            .oauth2Login(oauth2 -> oauth2
+                    .authorizationEndpoint(a -> a.authorizationRequestResolver(resolverComEscolhaDeConta()))
+                    .successHandler(oAuth2SuccessHandler)) // habilita /oauth2/authorization/google
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

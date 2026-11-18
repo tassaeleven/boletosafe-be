@@ -28,6 +28,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(new ErroResponse(mensagem));
     }
 
+    @ExceptionHandler(com.google.api.client.googleapis.json.GoogleJsonResponseException.class)
+    public ResponseEntity<ErroResponse> tratarErroGoogle(
+            com.google.api.client.googleapis.json.GoogleJsonResponseException ex) {
+        log.warn("Gmail recusou a requisição: {}", ex.getStatusCode());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErroResponse(
+                "O Google não liberou a leitura do Gmail. Reconecte a conta e marque a permissão de e-mail."));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroResponse> tratarErroGenerico(Exception ex) {
         log.error("Erro interno no Email Scanner Service", ex);
