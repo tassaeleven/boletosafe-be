@@ -31,13 +31,16 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final OAuth2FailureHandler oAuth2FailureHandler;
     private final ClientRegistrationRepository clientRegistrationRepository;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
                           OAuth2SuccessHandler oAuth2SuccessHandler,
+                          OAuth2FailureHandler oAuth2FailureHandler,
                           ClientRegistrationRepository clientRegistrationRepository) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.oAuth2SuccessHandler = oAuth2SuccessHandler;
+        this.oAuth2FailureHandler = oAuth2FailureHandler;
         this.clientRegistrationRepository = clientRegistrationRepository;
     }
 
@@ -67,7 +70,8 @@ public class SecurityConfig {
                     request -> request.getRequestURI().startsWith("/api/")))
             .oauth2Login(oauth2 -> oauth2
                     .authorizationEndpoint(a -> a.authorizationRequestResolver(resolverComEscolhaDeConta()))
-                    .successHandler(oAuth2SuccessHandler)) // habilita /oauth2/authorization/google
+                    .successHandler(oAuth2SuccessHandler)
+                    .failureHandler(oAuth2FailureHandler)) // habilita /oauth2/authorization/google
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
