@@ -29,6 +29,15 @@ spring:
 
 server:
   port: ${SERVER_PORT:8083}
+  # atrás do proxy do Render: usa https nos redirects (OAuth do Google)
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      cookie:
+        # front e scanner ficam em subdomínios diferentes: o cookie
+        # da sessão precisa poder cruzar sites
+        same-site: ${SESSION_COOKIE_SAMESITE:lax}
+        secure: ${SESSION_COOKIE_SECURE:false}
 
 boletosafe:
   frontend-url: ${FRONTEND_URL:http://localhost:4200}
