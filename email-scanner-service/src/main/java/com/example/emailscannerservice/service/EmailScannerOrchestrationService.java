@@ -62,8 +62,28 @@ public class EmailScannerOrchestrationService {
         List<EmailBoletoEncontrado> processados = new java.util.ArrayList<>();
 
         for (var anexo : anexos) {
-            if (emailBoletoEncontradoRepository.findByMensagemGmailId(anexo.mensagemId()).isPresent()) {
-                continue; // já processado numa sincronização anterior
+            var existente = emailBoletoEncontradoRepository.findByMensagemGmailId(anexo.mensagemId());
+            if (existente.isPresent()) {
+                EmailBoletoEncontrado bloqueado = existente.get();
+
+                // já processado antes: só tenta de novo se estava bloqueado e agora há senhas candidatas
+                if (bloqueado.getStatus() == StatusBoletoEncontrado.BLOQUEADO
+                        && bloqueado.getPdfBase64() != null
+                        && !senhasCandidatas.isEmpty()) {
+
+                    byte[] pdf = Base64.getDecoder().decode(bloqueado.getPdfBase64());
+                    var retentativa = pdfBoletoExtractorService.extrair(pdf, senhasCandidatas);
+
+                    if (retentativa.sucesso()) {
+                        preencherDadosExtraidos(bloqueado, retentativa);
+                        bloqueado.setStatus(StatusBoletoEncontrado.ANALISADO);
+                        bloqueado.setProcessadoEm(Instant.now());
+                        bloqueado.setPdfBase64(null);
+                        publicarParaAnalise(bloqueado);
+                        processados.add(emailBoletoEncontradoRepository.save(bloqueado));
+                    }
+                }
+                continue;
             }
 
             EmailBoletoEncontrado registro = new EmailBoletoEncontrado();
