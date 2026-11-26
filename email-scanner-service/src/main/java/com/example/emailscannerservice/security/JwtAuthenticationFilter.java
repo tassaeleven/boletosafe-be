@@ -1,7 +1,5 @@
 package com.example.emailscannerservice.security;
 
-import com.example.emailscannerservice.dto.ErroResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -26,7 +24,6 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public JwtAuthenticationFilter(JwtService jwtService) {
         this.jwtService = jwtService;
@@ -48,25 +45,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write(objectMapper.writeValueAsString(new ErroResponse("Token ausente")));
+            responderNaoAutorizado(response, "Token ausente");
             return;
         }
 
+        Claims claims;
         try {
-            Claims claims = jwtService.extrairClaims(authHeader.substring(7));
-            String perfil = claims.get("perfil", String.class);
-            Long usuarioId = ((Number) claims.get("usuarioId")).longValue();
-            var authentication = new UsernamePasswordAuthenticationToken(
-                    usuarioId, null, List.of(new SimpleGrantedAuthority("ROLE_" + perfil)));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            filterChain.doFilter(request, response);
-
-        } catch (JwtException e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write(objectMapper.writeValueAsString(new ErroResponse("Token inválido ou expirado")));
+            claims = jwtService.extrairClaims(authHeader.substring(7));
+        } catch (JwtException | IllegalArgumentException e) {
+            logger.warn("Token recusado: " + e.getMessage());
+            responderNaoAutorizado(response, "Token inválido ou expirado");
+            return;
         }
+
+        String perfil = claims.get("perfil", String.class);
+        Long usuarioId = ((Number) claims.get("usuarioId")).longValue();
+        var authentication = new UsernamePasswordAuthenticationToken(
+                usuarioId, null, List.of(new SimpleGrantedAuthority("ROLE_" + perfil)));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        filterChain.doFilter(request, response);
+    }
+
+    // JSON escrito à mão: evita depender de módulo de datas do Jackson aqui
+    private void responderNaoAutorizado(HttpServletResponse response, String mensagem) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"mensagem\":\"" + mensagem + "\"}");
     }
 }
