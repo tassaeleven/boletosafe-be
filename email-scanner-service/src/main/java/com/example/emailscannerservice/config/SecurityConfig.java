@@ -60,14 +60,20 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .authorizeHttpRequests(auth -> auth
+                // erros internos (/error) passam a aparecer como erro de verdade,
+                // em vez de serem redirecionados para o login do Google
+                .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/oauth2/**", "/login/**").permitAll()
                 .anyRequest().authenticated()
             )
+            // só o fluxo /oauth2 e /login pode redirecionar ao Google; qualquer
+            // outra rota sem autenticação responde 401
             .exceptionHandling(ex -> ex.defaultAuthenticationEntryPointFor(
                     new org.springframework.security.web.authentication.HttpStatusEntryPoint(
                             org.springframework.http.HttpStatus.UNAUTHORIZED),
-                    request -> request.getRequestURI().startsWith("/api/")))
+                    request -> !request.getRequestURI().startsWith("/oauth2")
+                            && !request.getRequestURI().startsWith("/login")))
             .oauth2Login(oauth2 -> oauth2
                     .authorizationEndpoint(a -> a.authorizationRequestResolver(resolverComEscolhaDeConta()))
                     .successHandler(oAuth2SuccessHandler)
