@@ -25,10 +25,7 @@ public class BoletoAnaliseController {
     }
 
     private Long extrairUsuarioIdDoToken() {
-        // O JwtAuthenticationFilter coloca o e-mail como "name" da autenticação;
-        // usuarioId em si é opcional aqui (so para auditoria) — simplificado
-        // para não obrigar uma chamada extra ao Auth Service.
         var auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth != null ? auth.getName().hashCode() * 1L : null;
+        return auth != null ? (Long) auth.getPrincipal() : null;
     }
 }

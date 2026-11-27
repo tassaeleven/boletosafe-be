@@ -22,10 +22,10 @@ public class AlertaService {
     }
 
     // GET /api/v1/boleto/alertas — usado pelo AlertaStore (httpResource) do frontend
-    public List<AlertaResponse> listar(String status) {
+    public List<AlertaResponse> listar(Long usuarioId, String status) {
         List<Alerta> alertas = (status != null && !status.isBlank())
-                ? alertaRepository.findByStatus(status)
-                : alertaRepository.findAll();
+                ? alertaRepository.findByAnaliseRiscoUsuarioIdAndStatus(usuarioId, status)
+                : alertaRepository.findByAnaliseRiscoUsuarioId(usuarioId);
 
         List<AlertaResponse> todas = alertas.stream().map(this::paraResponse).toList();
 

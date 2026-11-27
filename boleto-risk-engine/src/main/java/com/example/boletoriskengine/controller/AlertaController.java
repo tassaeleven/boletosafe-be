@@ -19,6 +19,8 @@ public class AlertaController {
     // Bate exatamente com AlertaStore (httpResource) do frontend
     @GetMapping("/alertas")
     public List<AlertaResponse> listar(@RequestParam(required = false) String status) {
-        return alertaService.listar(status);
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        Long usuarioId = (Long) auth.getPrincipal();
+        return alertaService.listar(usuarioId, status);
     }
 }
