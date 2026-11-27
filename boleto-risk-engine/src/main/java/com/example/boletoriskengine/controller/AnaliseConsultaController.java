@@ -19,6 +19,8 @@ public class AnaliseConsultaController {
     // GET /api/v1/boleto/analises?linhas=...&linhas=...
     @GetMapping("/analises")
     public List<AnaliseResumoResponse> consultar(@RequestParam(name = "linhas", required = false) List<String> linhas) {
-        return analiseConsultaService.consultar(linhas);
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        Long usuarioId = (Long) auth.getPrincipal();
+        return analiseConsultaService.consultar(usuarioId, linhas);
     }
 }

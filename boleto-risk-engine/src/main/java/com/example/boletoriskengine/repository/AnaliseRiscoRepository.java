@@ -11,7 +11,7 @@ import java.util.Collection;
 public interface AnaliseRiscoRepository extends JpaRepository<AnaliseRisco, Long> {
 
     List<AnaliseRisco> findByBeneficiario(Beneficiario beneficiario);
-    List<AnaliseRisco> findByBoletoLinhaDigitavelIn(Collection<String> linhasDigitaveis);
+    List<AnaliseRisco> findByUsuarioIdAndBoletoLinhaDigitavelIn(Long usuarioId, Collection<String> linhasDigitaveis);
 
     // usada pela regra de valor fora da media historica do beneficiario
     @org.springframework.data.jpa.repository.Query(
