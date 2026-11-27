@@ -13,6 +13,7 @@ public record BoletoEncontradoResponse(
         String beneficiarioNomeExtraido,
         BigDecimal valorExtraido,
         LocalDate vencimentoExtraido,
-        Instant criadoEm
+        Instant criadoEm,
+        String linhaDigitavel
 ) {
 }
