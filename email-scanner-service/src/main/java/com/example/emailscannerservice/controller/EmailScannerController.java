@@ -38,9 +38,14 @@ public class EmailScannerController {
      */
     @PostMapping("/sincronizar")
     public List<BoletoEncontradoResponse> sincronizar(OAuth2AuthenticationToken authentication,
-            @RequestParam Long usuarioId) throws Exception {
+            @RequestParam Long usuarioId, jakarta.servlet.http.HttpSession session) throws Exception {
+        Object dono = session.getAttribute(com.example.emailscannerservice.config.SecurityConfig.GOOGLE_USUARIO_ID);
+        if (dono == null || !dono.equals(usuarioId)) {
+            throw new com.example.emailscannerservice.exception.GoogleNaoConectadoException(
+                    "Este usuário ainda não conectou a própria conta Google.");
+        }
         orchestrationService.sincronizar(authentication, usuarioId);
-        return orchestrationService.listar(usuarioId); // devolve tudo do usuário, não só os novos
+        return orchestrationService.listar(usuarioId);
     }
 
     @PostMapping("/boletos/{id}/desbloquear")

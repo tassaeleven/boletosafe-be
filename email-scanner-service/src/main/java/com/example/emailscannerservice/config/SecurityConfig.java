@@ -12,6 +12,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 
 /**
  * Esse servico precisa de DOIS mecanismos de autenticacao ao mesmo tempo:
@@ -34,6 +36,8 @@ public class SecurityConfig {
     private final OAuth2FailureHandler oAuth2FailureHandler;
     private final ClientRegistrationRepository clientRegistrationRepository;
 
+    public static final String GOOGLE_USUARIO_ID = "GOOGLE_USUARIO_ID";
+
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
                           OAuth2SuccessHandler oAuth2SuccessHandler,
                           OAuth2FailureHandler oAuth2FailureHandler,
@@ -47,10 +51,35 @@ public class SecurityConfig {
     private OAuth2AuthorizationRequestResolver resolverComEscolhaDeConta() {
         var resolver = new DefaultOAuth2AuthorizationRequestResolver(
                 clientRegistrationRepository, "/oauth2/authorization");
-        // força o Google a mostrar a escolha de conta a cada conexão
         resolver.setAuthorizationRequestCustomizer(c ->
                 c.additionalParameters(p -> p.put("prompt", "select_account consent")));
-        return resolver;
+
+        return new OAuth2AuthorizationRequestResolver() {
+            @Override
+            public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
+                guardarUsuario(request);
+                return resolver.resolve(request);
+            }
+
+            @Override
+            public OAuth2AuthorizationRequest resolve(HttpServletRequest request, String registrationId) {
+                guardarUsuario(request);
+                return resolver.resolve(request, registrationId);
+            }
+        };
+    }
+
+    // quem clicou em "Conectar com o Google" fica registrado na sessão
+    private void guardarUsuario(HttpServletRequest request) {
+        String id = request.getParameter("usuarioId");
+        if (id == null || !request.getRequestURI().startsWith("/oauth2/authorization")) {
+            return;
+        }
+        try {
+            request.getSession(true).setAttribute(GOOGLE_USUARIO_ID, Long.valueOf(id));
+        } catch (NumberFormatException ignorado) {
+            // id inválido: não registra
+        }
     }
 
     @Bean

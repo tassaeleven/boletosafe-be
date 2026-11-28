@@ -49,9 +49,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        Object idDoToken = claims.get("usuarioId");
+        if (idDoToken == null) {
+            logger.warn("Token sem usuarioId: faça login novamente");
+            responderNaoAutorizado(response, "Token inválido ou expirado");
+            return;
+        }
+
         String perfil = claims.get("perfil", String.class);
+        Long usuarioId = ((Number) idDoToken).longValue();
+
         var authentication = new UsernamePasswordAuthenticationToken(
-                claims.getSubject(), null, List.of(new SimpleGrantedAuthority("ROLE_" + perfil)));
+                usuarioId, null, List.of(new SimpleGrantedAuthority("ROLE_" + perfil)));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         filterChain.doFilter(request, response);
     }

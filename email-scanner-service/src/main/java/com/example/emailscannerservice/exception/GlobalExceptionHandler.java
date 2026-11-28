@@ -36,6 +36,11 @@ public class GlobalExceptionHandler {
                 "O Google não liberou a leitura do Gmail. Reconecte a conta e marque a permissão de e-mail."));
     }
 
+    @ExceptionHandler(GoogleNaoConectadoException.class)
+    public ResponseEntity<ErroResponse> tratarGoogleNaoConectado(GoogleNaoConectadoException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErroResponse(ex.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroResponse> tratarErroGenerico(Exception ex) {
         log.error("Erro interno no Email Scanner Service", ex);

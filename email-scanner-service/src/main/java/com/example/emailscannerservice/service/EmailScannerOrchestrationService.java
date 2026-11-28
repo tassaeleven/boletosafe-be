@@ -158,7 +158,8 @@ public class EmailScannerOrchestrationService {
                 r.getBeneficiarioNomeExtraido(),
                 r.getValorExtraido(),
                 r.getVencimentoExtraido(),
-                r.getCriadoEm()
+                r.getCriadoEm(),
+                r.getLinhaDigitavelExtraida()
         );
     }
 

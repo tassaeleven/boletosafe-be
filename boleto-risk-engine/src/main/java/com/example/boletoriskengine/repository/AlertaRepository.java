@@ -8,6 +8,10 @@ import java.util.List;
 public interface AlertaRepository extends JpaRepository<Alerta, Long> {
     List<Alerta> findByStatus(String status);
 
+    List<Alerta> findByAnaliseRiscoUsuarioId(Long usuarioId);
+
+    List<Alerta> findByAnaliseRiscoUsuarioIdAndStatus(Long usuarioId, String status);
+
     // usada pela regra de reincidencia: beneficiario ja teve alerta ALTO?
     @org.springframework.data.jpa.repository.Query("""
         select count(al) > 0 from Alerta al
